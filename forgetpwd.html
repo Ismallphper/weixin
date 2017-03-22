@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>找回密码</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="__PUBLIC__/assets/css/fingpwd.css" />
+	</head>
+	<body>
+		<p class="findpwd" align="center">找回密码</p>
+		<div class="boxpwd">
+			<form action="{:U('Forgetpwd/find')}" method="post">
+				<table class="tablefind" align="center">
+					<tr>
+						<!--<td></td>-->
+						<td><input class="inputname" type="text" value="" name="phone" placeholder="请填入11位手机号码"/></td>
+						<!--<td></td>-->
+					</tr>
+					<tr>
+			           <!--  <td></td>-->
+   						<td>
+                            <input class="inputphone" type="text" name="send-sms-code"  id="send-sms-code" placeholder="手机验证码" >
+							<button id="btn-send-sms" type="button" style="width:75px;" onclick="sms_count_down()">发送</button>
+                            <span id="sms-count-down"></span>
+   						</td>
+   					</tr>	
+   					<tr>
+   						<!-- <td></td> -->
+						<td><input class="newpwd1" type="password" value="" name="password" placeholder="请输入您的新密码" style="display:none;"></td>
+						<!-- <td></td> -->
+   					</tr>
+   					<tr>
+   						<!-- <td></td> -->
+						<td><input class="newpwd2" type="password" value="" name="password1" placeholder="请再次输入" style="display:none;"/></td>
+						<!-- <td></td> -->
+   					</tr>	
+					<tr>
+						<!--<td>&nbsp;</td>-->
+						<td><button>立即验证</button></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<!-- Scripts -->
+			<script src="__PUBLIC__/assets/js/jquery.min.js"></script>
+			<script src="__PUBLIC__/assets/js/jquery.dropotron.min.js"></script>
+			<script src="__PUBLIC__/assets/js/skel.min.js"></script>
+			<script src="__PUBLIC__/assets/js/skel-viewport.min.js"></script>
+			<script src="__PUBLIC__/assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="__PUBLIC__/assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="__PUBLIC__/assets/js/main.js"></script>
+
+			<script type="text/javascript" charset="utf-8">
+            
+
+            $('.inputname').blur(function(){
+            	var phone = $('.inputname').val();
+            	$.ajax({
+            		type: "post", 
+                    dataType: "json",
+                    url: "{:U('Forgetpwd/checkphone')}", 
+                    data: {
+                        phone:phone
+                    },
+                    success:function(data){
+                    	if(data==0){
+                            $(".inputname").parent().append("<br/><b class='b'>您输入的手机号尚未注册，请先注册！</b>");
+                            $("#btn-send-sms").attr('disabled','disabled');
+                        }
+                        if(data==1){
+                        	//console.log(1);
+                            $(".b").empty();
+                            $(".inputname").parent().remove("b");
+                            $("#btn-send-sms").removeAttr("disabled");
+                        }
+                    }
+
+            	})
+            })
+            $("#send-sms-code").blur(function(){
+            	var code  = $("#send-sms-code").val();
+            	var phone = $(".inputname").val();
+            	$.ajax({
+            		type: "post", 
+                    dataType: "json",
+                    url: "{:U('Forgetpwd/updatepwd')}", 
+                    data: {
+                    	phone:phone,
+                        code:code
+                    },
+                    success:function(data){
+                    	if(data == 0){
+                    		$("#send-sms-code").parent().append("<br/><b class='b'>您输入的验证码有误，请重新输入！</b>");
+                    	}
+                    	if(data == 1){
+                    		$(".newpwd1").css("display","block");
+                    		$(".newpwd2").css("display","block");
+                    	}
+                    }
+            	})
+            })
+            /**
+            * 发送短信验证码后，60秒倒计时
+            */
+            var seconds_left = 60;
+            function sms_count_down(){
+                if(seconds_left == 60 || seconds_left == 0){
+                var mobile = $(".inputname").val();
+                //console.log(mobile);
+                $.ajax({ 
+                    type: "post", 
+                    dataType: "json",
+                    url: "{:U('Forgetpwd/sendSMS')}", 
+                    data: {
+                        tplid:'30479',
+                        mobile:mobile,
+                    },
+                    success:function(){}
+                })  
+            }
+                if(seconds_left > 0){
+                    seconds_left = seconds_left-1;
+                    //var b=new Date();
+                    document.getElementById("btn-send-sms").innerHTML = seconds_left + "秒";
+                    setTimeout("sms_count_down()",1000);
+                } else {
+                    //根据 http://stackoverflow.com/questions/7526601/setattributedisabled-false-changes-editable-attribute-to-false
+                    // 不能为 setAttribute 设置任何值，都会变成 ”disabled“,要使用 removeAttribute
+                    document.getElementById("btn-send-sms").removeAttribute("disabled");
+                    document.getElementById("btn-send-sms").innerHTML = "重新发送";
+                    document.getElementById("sms-count-down").innerHTML = "";
+                }
+            }
+        </script>
+	</body>
+</html>
